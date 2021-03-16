@@ -18,37 +18,82 @@ public class ListServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         EmployeeModel employeeModel = EmployeeModel.getInstance();
-        // verificam daca avem specificata pagina ca parametru la URL
+
+        final String query = req.getParameter("q");
+        if (query != null) {
+            search(req, resp);
+        } else {
+            display(req, resp);
+        }
+
+    }
+
+    public boolean checkIfPageExists(String p, String searchQuery) {
+        final EmployeeModel instance = EmployeeModel.getInstance();
+        if(p != null){
+            if(searchQuery != null) {
+                return instance.pageExists(Integer.parseInt(p), searchQuery);
+            }
+            return instance.pageExists(Integer.parseInt(p));
+        }
+        return instance.pageExists(1);
+    }
+
+    public String getPageNotExistMessage(String p) {
+        return "The requested page (" + p + ") does not exist.";
+    }
+
+    private void search(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        EmployeeModel model = EmployeeModel.getInstance();
+        final String searchQuery = req.getParameter("q");
         final String p = req.getParameter("p");
         int page = 1;
-        if (p != null) {
-            // daca pagina exista
-            // determinam daca pagina e corecta
-            final boolean pageExists = employeeModel.pageExists(Integer.parseInt(p));
-            if (!pageExists) {
-                // setam mesaj de eroare
-            }
-            page = pageExists ? Integer.parseInt(p) : page;
-            // daca ok- extragem un bloc de informatie din lista intreaga
+        boolean pageExists = this.checkIfPageExists(p, searchQuery);
 
+        if (!pageExists) {
+            req.setAttribute("wrongPageMsg", getPageNotExistMessage(p));
         }
-        // daca pagina nu este corecta
-        // redirectionam pe pagina 1
-        // afisam un mesaj de eroare
+        page = pageExists ? Integer.parseInt(p) : page;
+        // extragem query
+        // filtram datele dupa query
+        List<Employee> filtered = model.getPage(page, searchQuery); // <10
+        // returnam datele filtrate
+        req.setAttribute("employees", filtered);
 
-        // returnam
-        // 1. o portiune de obiecte Employee (10 pe pagina)
-        final List<Employee> employeeList = employeeModel.getEmployeeList();
-        req.setAttribute("employees", employeeList);
-
-        // 2. numarul total de pagini
-        req.setAttribute("totalPages", employeeModel.getTotalPages());
-        // 3. numarul paginii curente
-        req.setAttribute("currentPage", 5);
-        // 4. mesajul de eroare daca exista
+        req.setAttribute("totalPages", model.getTotalPages(searchQuery));
+        req.setAttribute("currentPage", page);
 
         RequestDispatcher dispatcher = req.getRequestDispatcher("list.jsp");
         dispatcher.forward(req, resp);
 
+    }
+
+    private void display(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        EmployeeModel employeeModel = EmployeeModel.getInstance();
+        final String p = req.getParameter("p");
+        int page = 1;
+        boolean pageExists = this.checkIfPageExists(p, null);
+
+        if (!pageExists) {
+            req.setAttribute("wrongPageMsg", getPageNotExistMessage(p));
+        }
+        page = pageExists ? Integer.parseInt(p) : page;
+
+        final List<Employee> employeeList = employeeModel.getPage(page);
+        req.setAttribute("employees", employeeList);
+
+        req.setAttribute("totalPages", employeeModel.getTotalPages());
+        req.setAttribute("currentPage", page);
+
+        RequestDispatcher dispatcher = req.getRequestDispatcher("list.jsp");
+        dispatcher.forward(req, resp);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // citim parametru de cautare
+        final String query = req.getParameter("query");
+        // afisam datele filtrate
+        resp.sendRedirect("list?q=" + query);
     }
 }

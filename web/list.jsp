@@ -18,6 +18,29 @@
 <%@include file="lib/navbar.html" %>
 <div class="container">
     <div class="row">
+        <c:if test="${not empty requestScope.wrongPageMsg}">
+            <div class="alert alert-danger" role="alert">
+               <c:out value="${requestScope.wrongPageMsg}"/>
+            </div>
+        </c:if>
+
+    </div>
+
+
+    <div class="row">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="#">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Employee list</li>
+            </ol>
+        </nav>
+
+        <c:if test="${not empty param.q}">
+            <div class="alert alert-primary" role="alert">
+                Active filter: <c:out value="${param.q}"/> <a href="list">Clear</a>
+            </div>
+        </c:if>
+
         Employees list:<br/>
 
         <c:if test="${requestScope.employees != null && !requestScope.employees.isEmpty()}">
@@ -56,7 +79,15 @@
                                 </c:otherwise>
                             </c:choose>
 
-                                <a class="page-link" href="list?p=${i}"><c:out value="${i}"/> </a>
+                            <c:choose>
+                                <c:when test="${not empty param.q}">
+                                    <a class="page-link" href="list?q=${param.q}&p=${i}"><c:out value="${i}"/> </a>
+                                </c:when>
+                                <c:otherwise>
+                                    <a class="page-link" href="list?p=${i}"><c:out value="${i}"/> </a>
+                                </c:otherwise>
+                            </c:choose>
+
                             </li>
 
 

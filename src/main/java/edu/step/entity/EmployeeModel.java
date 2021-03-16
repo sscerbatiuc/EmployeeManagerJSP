@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-// Model - View - Controller
-// @Singleton
 public class EmployeeModel {
+
+    private final static int rowsPerPage = 10;
 
     private static EmployeeModel instance = new EmployeeModel();
 
@@ -24,8 +24,18 @@ public class EmployeeModel {
     }
 
     public int getTotalPages() {
-        int numberOfPages = this.employeeList.size() / 10; // 0.223226
-        int rest = this.employeeList.size() % 10;
+        int numberOfPages = getTotal() / rowsPerPage; // 0.223226
+        int rest = getTotal() % rowsPerPage;
+        if (rest > 0) {
+            numberOfPages += 1;
+        }
+        return numberOfPages;
+    }
+    //
+    public int getTotalPages(String searchQuery){
+        final List<Employee> filtered = this.search(searchQuery);
+        int numberOfPages = filtered.size() / rowsPerPage;
+        int rest = filtered.size() % rowsPerPage;
         if(rest > 0){
             numberOfPages += 1;
         }
@@ -36,6 +46,11 @@ public class EmployeeModel {
         return getTotalPages() >= page;
     }
 
+    public boolean pageExists(int page, String searchQuery) {
+        return getTotalPages(searchQuery) >= page;
+    }
+
+
     public boolean add(Employee emp) {
         return this.employeeList.add(emp);
     }
@@ -44,8 +59,30 @@ public class EmployeeModel {
         return employeeList;
     }
 
-    public List<String> list() {
-        return employeeList.stream().map(user -> user.getName()).collect(Collectors.toList());
+    public int getTotal() {
+        return this.employeeList.size();
+    }
+
+    public List<Employee> search(String query) {
+        final List<Employee> filtered = this.employeeList.stream()
+                .filter(employee -> employee.getName().contains(query))
+                .collect(Collectors.toList());
+        return filtered;
+    }
+
+    public List<Employee> getPage(int page) {
+        int to = page * rowsPerPage;
+        int from = to - rowsPerPage;
+        to = Math.min(to, getTotal());
+        return this.employeeList.subList(from, to);
+    }
+
+    public List<Employee> getPage(int page, String query){
+        final List<Employee> filtered = this.search(query);
+        int to = page * rowsPerPage;
+        int from = to - rowsPerPage;
+        to = Math.min(to, filtered.size());
+        return filtered.subList(from, to);
     }
 
     public void deleteEmployee(int position) {

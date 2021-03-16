@@ -9,9 +9,18 @@
 <html>
 <head>
     <title>Add employee</title>
+    <%@ include file="lib/bootstrap.html"%>
 </head>
 <body>
 <div>
+
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Add employee</li>
+        </ol>
+    </nav>
+
     <form method="post">
         <label>Name: <input type="text" name="name"></label>
         <button type="submit">Save</button>
